@@ -68,21 +68,6 @@ import SkyClock from '../components/SkyClock.astro';
 - ページ全体に効くリセット（`height: 100%`、`overflow: hidden`）は `is:global`
 - コンポーネント固有の見た目は `SkyClock.astro` のスコープ付き `<style>` に閉じる
 
-### 悪い例：ページごとに html/body を書く
-
-```astro
-<!-- index.astro に全部書く -->
-<html lang="ja">
-  <head>...</head>
-  <body>...</body>
-</html>
-```
-
-- ページが増えると head や共通 CSS が重複
-- タイトル変更のたびにコピペが発生
-
-### 良い例：layout + slot
-
 ```astro
 ---
 interface Props {
@@ -144,22 +129,6 @@ function colorAt(h: number, idx: 1 | 2): RGB {
 - `t` は区間内の進捗（0〜1）
 - RGB 各チャンネルを個別に補間し、`linear-gradient` に渡す
 - 日の出（6.5）・夕方（18）など変化が大きい時刻にキーを denser に置くのがコツ
-
-### 悪い例：if の羅列で色を固定
-
-```ts
-if (h < 6) sky.style.background = '#02030c';
-else if (h < 12) sky.style.background = '#bee1ff';
-else if (h < 18) sky.style.background = '#ff7832';
-else sky.style.background = '#050612';
-```
-
-- 境界で色が飛び、タイムラプス感が消える
-- 上と下のグラデーションを表現しづらい
-
-### 良い例：キーフレーム + 補間
-
-- 連続的に色が移る
 - キーを増やすだけで見た目を調整できる（ロジック変更不要）
 
 > 参照: [MDN — linear-gradient()](https://developer.mozilla.org/en-US/docs/Web/CSS/gradient/linear-gradient) / 線形補間の一般式
@@ -185,18 +154,6 @@ function place(el: HTMLElement, t: number) {
 - CSS 側で `transform: translate(-50%, -50%)` し、座標を中心基準にする
 - 太陽: 6時〜18時（`ts = (h - 6) / 12`）
 - 月: 18時〜翌6時（深夜は `h + 24` して連続区間にする）
-
-### 悪い例：left だけ動かして直線移動
-
-```ts
-el.style.left = `${(h / 24) * innerWidth}px`;
-el.style.top = '20%';
-```
-
-- 空を横切る実感が薄い
-- 地平線の出入り（フェード）と合わせにくい
-
-### 良い例：半円 + 端での opacity フェード
 
 ```ts
 sun.style.opacity = String(
@@ -227,21 +184,7 @@ const night =
 stars.style.opacity = String(night);
 ```
 
-### 悪い例：毎フレーム星を再抽選
-
-```ts
-setInterval(() => {
-	drawStars(); // 毎秒ランダム再配置
-	render(current());
-}, 1000);
-```
-
-- 星がチカチカして不自然
-- 描画コストが増える
-
-### 良い例：星はリサイズ時だけ、夜の見え方は opacity
-
-- 星の配置は安定
+- 星の配置は安定（毎秒の再抽選はしない）
 - 空の色変化と独立して昼夜のフェードを制御できる
 - 装飾用 canvas には `aria-hidden="true"` を付与
 
@@ -253,6 +196,7 @@ setInterval(() => {
 - スライダー操作で `live = false` に切り替え、手動時刻を表示
 - 「リアルタイムに戻す」で再び `Date` 連動
 - ライブ中は 1 秒ごとに `render`、スライダー値も同期
+- `current()` が唯一の「いまの時刻」供給源
 
 ```ts
 function current() {
@@ -263,21 +207,6 @@ function current() {
 	return parseFloat(slider.value);
 }
 ```
-
-### 悪い例：スライダーを動かしてもライブ更新が上書きする
-
-```ts
-setInterval(() => render(new Date().getHours()), 1000);
-slider.addEventListener('input', () => render(parseFloat(slider.value)));
-```
-
-- 手動操作直後に interval が実時刻で上書き
-- スクラブ体験が壊れる
-
-### 良い例：live フラグで入力源を一本化
-
-- `current()` が唯一の「いまの時刻」供給源
-- UI イベントはフラグ切り替えに専念
 
 ## UI 文字色の自動切替
 
@@ -298,6 +227,5 @@ ui.style.color = lum > 140 ? '#222' : '#eee';
 
 - 本実装は「時刻キーフレームの補間」と「半円軌道の配置」が核
 - レイアウト・コンポーネント・TypeScript スクリプトに役割を分けて構成する
-- 悪い例の多くは「見た目は動くが、境界で飛ぶ・状態が競合する」パターン
 
 > 参照: [Astro — Styles and CSS](https://docs.astro.build/en/guides/styling/) / [Astro — Client-side scripts](https://docs.astro.build/en/guides/client-side-scripts/)
