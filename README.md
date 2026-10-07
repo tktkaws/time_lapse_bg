@@ -1,7 +1,6 @@
 # 空の時計 — 時刻で変わる空を Astro で実装する
 
 時刻（またはスライダー）に応じて空の色・太陽・月・星を変化させるフルスクリーン背景の実装解説。
-対象読者はジュニアクラスのフロントエンドエンジニア。
 
 ## セットアップ
 
@@ -18,9 +17,9 @@ npm run dev
 
 ## この記事のテーマ
 
-- 単一 HTML（`sky-bg.html`）を Astro プロジェクトへ分割移植する手順
-- React などの UI フレームワークを使わず、`<script>` と TypeScript でインタラクションを足す方法
-- 時刻キーフレーム間の色補間と、太陽・月の半円軌道配置
+- 時刻キーフレーム間の色補間
+- 太陽・月の半円軌道配置
+- Astro コンポーネントと TypeScript スクリプトの役割分担
 
 ## プロジェクト構成
 
@@ -35,30 +34,6 @@ src/
 - ページはレイアウトとコンポーネントを組み立てるだけ
 - 見た目はコンポーネント、計算ロジックは `scripts/` に分離
 - 関心の分離により、ロジック単体の読みやすさが上がる
-
-> 参照: [Astro — Project structure](https://docs.astro.build/en/basics/project-structure/)
-
-## なぜ React 島ではなく `<script>` か
-
-- この UI は「状態を宣言的に描画する」より「毎秒 DOM を更新する」タイプ
-- 太陽位置・空色・時計表示を `style` / `textContent` で直接いじる
-- React を載せる利点（仮想 DOM・コンポーネント状態）が薄い
-- Astro のデフォルト `<script>` で十分（バンドル・TypeScript・重複排除）
-
-### 悪い例：不要な React 島
-
-```astro
----
-import SkyClock from '../components/SkyClock.jsx';
----
-<SkyClock client:load />
-```
-
-- ハイドレーションと React ランタイムが乗る
-- `useEffect` + `setInterval` で結局 imperative な更新になることが多い
-- この規模ではオーバーヘッドに見合わない
-
-### 良い例：Astro コンポーネント + クライアントスクリプト
 
 ```astro
 ---
@@ -81,11 +56,11 @@ import SkyClock from '../components/SkyClock.astro';
 </script>
 ```
 
-- フレームワーク JS なし
-- ロジックは TypeScript モジュールとして再利用可能
+- Astro の `<script>` はバンドル・TypeScript・重複排除が効く
+- ロジックは TypeScript モジュールとして分離
 - `data-*` 属性で DOM を特定し、セレクタの結合度を下げる
 
-> 参照: [Astro — Client-side scripts](https://docs.astro.build/en/guides/client-side-scripts/)
+> 参照: [Astro — Project structure](https://docs.astro.build/en/basics/project-structure/) / [Astro — Client-side scripts](https://docs.astro.build/en/guides/client-side-scripts/)
 
 ## レイアウトとグローバルスタイル
 
@@ -319,36 +294,10 @@ ui.style.color = lum > 140 ? '#222' : '#eee';
 
 > 参照: [WCAG — Relative luminance](https://www.w3.org/TR/WCAG21/#dfn-relative-luminance)（係数の由来）
 
-## 単一 HTML からの移植チェックリスト
-
-元の `sky-bg.html` を Astro に落とすときの対応表。
-
-| 元（単一 HTML） | Astro 側 |
-|---|---|
-| `<html>` / `<head>` / 全体 CSS | `Layout.astro` + `is:global` |
-| 空・太陽・月・UI のマークアップ | `SkyClock.astro` |
-| コンポーネント固有 CSS | `SkyClock.astro` の `<style>` |
-| インライン `<script>` 全体 | `src/scripts/sky-clock.ts` |
-| `getElementById` | `data-*` + `querySelector` |
-| ルートページ | `src/pages/index.astro` |
-
-- id 依存を減らし、コンポーネントのルート要素配下で完結させる
-- 初期化関数に `root` を渡すと、将来複数インスタンスにも拡張しやすい
-
-## 設計チェックリスト
-
-- [ ] 静的マークアップとクライアントロジックをファイル分割している
-- [ ] 不要な UI フレームワーク島を載せていない
-- [ ] 色変化はキーフレーム補間になっている（段差の if 連打ではない）
-- [ ] 天体は軌道パラメータで動かし、マジックナンバーの top/left 直書きを避けている
-- [ ] ライブ / 手動の入力源がフラグで切り替わる
-- [ ] 装飾 canvas に `aria-hidden`、スライダーに `aria-label` がある
-
 ## まとめ
 
 - 本実装は「時刻キーフレームの補間」と「半円軌道の配置」が核
-- Astro ではレイアウト・コンポーネント・TypeScript スクリプトに分割し、Zero JS のまま必要分だけクライアントへ送る
-- 悪い例の多くは「見た目は動くが、境界で飛ぶ・状態が競合する・依存が重い」パターン
-- 単一 HTML の実験を、そのまま本番向け構成へ落とし込む練習題として使える
+- レイアウト・コンポーネント・TypeScript スクリプトに役割を分けて構成する
+- 悪い例の多くは「見た目は動くが、境界で飛ぶ・状態が競合する」パターン
 
 > 参照: [Astro — Styles and CSS](https://docs.astro.build/en/guides/styling/) / [Astro — Client-side scripts](https://docs.astro.build/en/guides/client-side-scripts/)
