@@ -1,0 +1,115 @@
+---
+
+---
+
+<div class="sky-clock" data-sky-clock>
+	<div class="sky" data-sky>
+		<canvas class="stars" data-stars aria-hidden="true"></canvas>
+		<div class="orb moon" data-moon></div>
+		<div class="orb sun" data-sun></div>
+		<div class="ground"></div>
+	</div>
+	<div class="ui" data-ui>
+		<div class="clock" data-clock>--:--</div>
+		<input
+			class="slider"
+			data-slider
+			type="range"
+			min="0"
+			max="24"
+			step="0.01"
+			value="12"
+			aria-label="時刻を操作"
+		/>
+		<div>
+			<button type="button" data-live>リアルタイムに戻す</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { initSkyClock } from '../scripts/sky-clock';
+
+	const root = document.querySelector<HTMLElement>('[data-sky-clock]');
+	if (root) initSkyClock(root);
+</script>
+
+<style>
+	.sky-clock {
+		position: relative;
+		height: 100%;
+	}
+
+	.sky {
+		position: fixed;
+		inset: 0;
+	}
+
+	.stars {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+	}
+
+	.orb {
+		position: absolute;
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	.sun {
+		width: 22vmin;
+		height: 22vmin;
+		background: radial-gradient(circle, #fff1c9 0%, #ffb347 45%, #ff7a1a 100%);
+		filter: blur(7px);
+		box-shadow: 0 0 12vmin 6vmin rgba(255, 150, 40, 0.55);
+	}
+
+	.moon {
+		width: 14vmin;
+		height: 14vmin;
+		background: radial-gradient(circle, #ffffff 0%, #dfe6ff 60%, #b9c4f0 100%);
+		filter: blur(4px);
+		box-shadow: 0 0 8vmin 3vmin rgba(200, 215, 255, 0.35);
+	}
+
+	.ground {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 18%;
+		background: linear-gradient(to top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0));
+	}
+
+	.ui {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+		text-align: center;
+		transition: color 0.5s;
+	}
+
+	.clock {
+		font-size: 2.4rem;
+		font-weight: 300;
+		letter-spacing: 0.08em;
+	}
+
+	.slider {
+		width: min(520px, 90%);
+		margin-top: 8px;
+	}
+
+	button {
+		margin-top: 8px;
+		padding: 6px 14px;
+		border-radius: 999px;
+		border: 1px solid currentColor;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+	}
+</style>
